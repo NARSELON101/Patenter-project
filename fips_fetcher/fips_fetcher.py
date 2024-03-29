@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup
 
 class FipsFetcher:
     # Для поиска патента необходимы DB = RUPM, rn = 6919, DocNumber
-    url_template = 'https://www1.fips.ru/registers-doc-view/fips_servlet?DB={DB}&rn={RN}&DocNumber={DocNumber}&TypeFile=html'
+    url_template = ('https://www1.fips.ru/registers-doc-view/fips_servlet?DB={DB}&rn={RN}&DocNumber={'
+                    'DocNumber}&TypeFile=html')
     default_db = 'RUPM'
     default_rn = 6919
     __scheme = {
@@ -56,11 +57,9 @@ def get_doc(id_: int, db=FipsFetcher.default_db, rn=FipsFetcher.default_rn) -> d
         if p_72 is None:
             p_72 = get_p_if_start_with(p, '(72) Автор(ы):')
 
-    # TODO Придумать как обработать ненаход
     if p_21_22 is not None:
         application_id_21, date_of_application_submission_22 = p_21_22.find_next('b').text.strip().split(',')
         date_of_application_submission_22 = datetime.strptime(date_of_application_submission_22.strip(), '%d.%m.%Y')
-        #application_id_21 = int(application_id_21)
 
         res['application_id_21'] = application_id_21
         res['date_of_application_submission_22'] = date_of_application_submission_22
@@ -85,6 +84,8 @@ def get_doc(id_: int, db=FipsFetcher.default_db, rn=FipsFetcher.default_rn) -> d
     priority: list[str] = []
     while 'prior' not in p.attrs['class'] if 'class' in p.attrs else True:
         p = p.find_previous_sibling('p')
+        if p is None:
+            break
         priority.append(p.text.strip())
 
     res['priority'] = priority[:-1]
