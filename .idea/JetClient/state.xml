@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JetClientState">
+    <option name="draftsState">
+      <draftsState>
+        <option name="requests">
+          <list>
+            <requestState>
+              <option name="auth">
+                <authState>
+                  <option name="apiKey">
+                    <apiKeyAuthState>
+                      <option name="inHeader" value="false" />
+                      <option name="key" value="A" />
+                      <option name="value" value="W" />
+                    </apiKeyAuthState>
+                  </option>
+                  <option name="type" value="API_KEY" />
+                </authState>
+              </option>
+              <option name="id" value="23d41f50-9102-48d5-a9ff-5cfc61287087" />
+              <option name="method" value="GET" />
+              <option name="name" value="Draft" />
+              <option name="queryParams">
+                <list>
+                  <queryParamState>
+                    <option name="key" value="HUY" />
+                    <option name="value" value="PZDA" />
+                  </queryParamState>
+                </list>
+              </option>
+              <option name="url" value="http://google.com?HUY=PZDA" />
+            </requestState>
+          </list>
+        </option>
+      </draftsState>
+    </option>
+    <option name="id" value="095463f8-63b1-4fee-bd9e-62c09dbeaa5b" />
+  </component>
+</project>
