@@ -29,22 +29,34 @@ def get_doc(id_: int, db=FipsFetcher.default_db, rn=FipsFetcher.default_rn) -> d
     req = requests.get(url)
     if not req.ok:
         return None
+
     html = req.text
     if html == 'Документ с данным номером отсутствует':
         return None
+
     soup = BeautifulSoup(html, 'html.parser')
     res = {'id': id_}
-    for s in soup.find_all('td', id='StatusL'):
+    all_td = soup.find_all('td', id='StatusL')
+
+    if all_td is None:
+        return None
+
+    for s in all_td:
         if s.text.strip() == 'Статус:':
             status = s.find_next("td", id="StatusR")
             res['status'] = status.text
             break
     table_bib = soup.find('table', id='bib')
+
+    if table_bib is None:
+        return None
+
     p_21_22: bs4.Tag | None = None
     p_24: bs4.Tag | None = None
     p_45: bs4.Tag | None = None
     p_56: bs4.Tag | None = None
     p_72: bs4.Tag | None = None
+
     for p in table_bib.find_all('p'):
         if p_21_22 is None:
             p_21_22 = get_p_if_start_with(p, '(21)(22) Заявка:')
