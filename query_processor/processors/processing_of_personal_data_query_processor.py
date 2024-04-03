@@ -1,14 +1,15 @@
 import json
 
 from query_processor.data_source.console_data_source import ConsoleDataSource
-from query_processor.data_source.source import DataSource
 from query_processor.data_source.date_now_data_source import DateNowDataSource
+from query_processor.data_source.source import DataSource
+from query_processor.gpt.yagpt import yagpt
 from query_processor.processors.processor import QueryProcessor
 from query_processor.templates.template import Template
-from query_processor.gpt.yagpt import yagpt
 
 
 class PersonalDataQueryProcessor(QueryProcessor):
+    __name = 'Процессор для Соглашения об обработке персональных данных'
     fields_data_source: dict[str, DataSource] = {
         'name': ConsoleDataSource('Введите имя: '),
         'address': ConsoleDataSource('Введите адрес места жительства: '),
@@ -35,13 +36,16 @@ class PersonalDataQueryProcessor(QueryProcessor):
               'Выведи ответ в формате json, где если поле есть в запросе напиши его из запроса, '
               'если поля нет в запросе напиши null. Ответь кратко')
 
+    @staticmethod
+    def get_name():
+        return PersonalDataQueryProcessor.__name
+
+    def __str__(self):
+        return PersonalDataQueryProcessor.__name
+
     def __init__(self, use_gpt: bool, template: Template):
         self.template = template
         self.use_gpt: bool = use_gpt
-
-    @staticmethod
-    def get_name():
-        return 'Процессор для Соглашения об обработке персональных данных'
 
     def process_query(self, query: str):
         res = {}
@@ -68,6 +72,3 @@ class PersonalDataQueryProcessor(QueryProcessor):
                 res[field] = self.fields_data_source[field].get()
 
         return self.template.fill(res)
-
-
-
