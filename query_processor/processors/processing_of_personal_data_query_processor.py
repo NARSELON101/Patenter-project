@@ -51,9 +51,11 @@ class PersonalDataQueryProcessor(QueryProcessor):
         res = {}
         if self.use_gpt:
             gpt_ans = yagpt(self.prompt.format(query=query))
-            json_data = json.loads(gpt_ans)
-            gpt_res: dict = json.loads(json_data['result']['alternatives'][0]['message']['text'])
-
+            json_data: dict = json.loads(gpt_ans)
+            gpt_res: dict | None = json.loads(
+                json_data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text'))
+            if gpt_res is None:
+                exit(f"Ошибка работы GPT!!!! {gpt_ans}")
             for field, val in gpt_res.items():
                 if val != "null":
                     print(f"Gpt обнаружил поле {field} - {val}")
