@@ -17,7 +17,7 @@ if __name__ == '__main__':
         use_gpt = True
     else:
         use_gpt = False
-    processor = processors[which_processor](use_gpt=use_gpt, template=PersonalDataStringTemplate())
+    processor = processors[which_processor](use_gpt)
     query = ''
     if use_gpt:
         query = input("Введите запрос для GPT: ")

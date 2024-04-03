@@ -5,7 +5,7 @@ from query_processor.data_source.date_now_data_source import DateNowDataSource
 from query_processor.data_source.source import DataSource
 from query_processor.gpt.yagpt import yagpt
 from query_processor.processors.processor import QueryProcessor
-from query_processor.templates.template import Template
+from query_processor.templates.personal_data_string_template import PersonalDataStringTemplate
 
 
 class PersonalDataQueryProcessor(QueryProcessor):
@@ -43,8 +43,8 @@ class PersonalDataQueryProcessor(QueryProcessor):
     def __str__(self):
         return PersonalDataQueryProcessor.__name
 
-    def __init__(self, use_gpt: bool, template: Template):
-        self.template = template
+    def __init__(self, use_gpt: bool):
+        self.template = PersonalDataStringTemplate()
         self.use_gpt: bool = use_gpt
 
     def process_query(self, query: str):
