@@ -4,8 +4,8 @@ from query_processor.templates.personal_data_string_template import PersonalData
 if __name__ == '__main__':
     processors = [PersonalDataQueryProcessor]
     print("Доступные процессоры: \n")
-    for i, processor in enumerate(processors):
-        print(i + 1, processor.get_name())
+    for i, processor in enumerate(processors, start=1):
+        print(i, processor.get_name())
 
     print()
 
