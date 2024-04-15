@@ -38,3 +38,4 @@ class PersonalDataStringTemplate(Template):
 
     def fill(self, fields) -> str:
         return self.file_template.format_map(fields)
+
