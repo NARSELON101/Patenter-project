@@ -8,11 +8,10 @@ from query_processor.templates.template import Template
 class LetterMaintenanceDocxTemplate(Template):
     __fields = [
         'date', 'id', 'first_application', 'timestamp', 'main_application',
-        'patent_id', 'patent_name', 'payment_order', 'payment_count',
-        'date', 'id'
+        'patent_id', 'patent_name', 'payment_order', 'payment_date', 'payment_count'
     ]
 
-    template = './docs/Letter_maintenance_template.docx'
+    template = './docs/LetterMaintenance.docx'
 
     def get_fields(self):
         return self.__fields
