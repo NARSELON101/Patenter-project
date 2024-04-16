@@ -1,8 +1,10 @@
 import requests
 
+
 class YaGptConfig:
     catalog_id = 'b1g659p7ld8o2k31g37c'
     api_key = 'AQVN0ZRFbyqk97EWUy0KAG9jzqs6oUdcXrNYjYJ-'
+
 
 def yagpt(query):
     prompt = {
@@ -28,4 +30,6 @@ def yagpt(query):
 
     response = requests.post(url, headers=headers, json=prompt)
     result = response.text
+    with open('./log.txt', 'a') as f:
+        f.write(result)
     return result
