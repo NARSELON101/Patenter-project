@@ -6,7 +6,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from query_processor.data_source.source import DataSource
 
 
-class LetterMaintenanceXlsxDataSource(DataSource):
+class LetterMaintenancePaymentXlsxDataSource(DataSource):
     __fields_to_xlsx_column = {'timestamp': 20, 'patent_id': 20, 'payment_order': 18,
                                'payment_date': 13, 'payment_count': 17}
 
@@ -14,8 +14,10 @@ class LetterMaintenanceXlsxDataSource(DataSource):
         self.xlsx_file_path = xlsx_file_path
 
     def get(self, *args, **kwargs):
+        """
+        Получает список строк которые нужно спарсить.
+        """
         workbook = openpyxl.load_workbook(self.xlsx_file_path)
-        # Define variable to read the active sheet:
         worksheet: Worksheet = workbook.active
         res = {}
         for row in args:
