@@ -1,6 +1,7 @@
 import uuid
 
 from docx import Document
+from docx2pdf import convert as convert_docx_to_pdf
 
 from query_processor.templates.template import Template
 
@@ -36,3 +37,15 @@ class LetterMaintenanceDocxTemplate(Template):
 
         doc.save(output_file)
         return output_file
+
+class LetterMaintenancePdfTemplate(LetterMaintenanceDocxTemplate):
+
+    # Для конвертации word в pdf используется библиотека docx2pdf
+    # также есть вариант использовать pandoc
+    # TODO: попробовать другие варианты конвертации
+    def fill(self, fields) -> str:
+        docx_file = super().fill(fields)
+        pdf_file = docx_file.replace('.docx', '.pdf')
+        convert_docx_to_pdf(docx_file, pdf_file)
+
+        return pdf_file
