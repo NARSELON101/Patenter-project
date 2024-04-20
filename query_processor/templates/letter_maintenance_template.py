@@ -25,7 +25,6 @@ class LetterMaintenanceDocxTemplate(Template):
             for key, value in fields.items():
                 for run in paragraph.runs:
                     if f'{{{{ {key} }}}}' in run.text:
-                        # TODO Добавить обработку даты из datetime
                         if isinstance(value, datetime):
                             value = value.strftime('%d.%m.%Y')
                         run.text = run.text.replace(f'{{{{ {key} }}}}', str(value))
@@ -37,7 +36,6 @@ class LetterMaintenanceDocxTemplate(Template):
                         for key, value in fields.items():
                             for run in paragraph.runs:
                                 if f'{{{{ {key} }}}}' in run.text:
-                                    # TODO Добавить обработку даты из datetime
                                     if isinstance(value, datetime):
                                         value = value.strftime('%d.%m.%Y')
                                     run.text = run.text.replace(f'{{{{ {key} }}}}', str(value))
