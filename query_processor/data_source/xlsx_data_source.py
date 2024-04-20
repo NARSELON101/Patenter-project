@@ -39,7 +39,7 @@ class XlsxDataSource(DataSource):
             filter_predicate: Callable[[dict], bool] | None = None,
             curr_min_row: int | None = None,
             curr_max_row: int | None = None,
-            all: bool = False) -> list[dict]:
+            all_fields: bool = False) -> list[dict]:
         """
         :param filter_dict: dict Словарь, где ключ - название столбца,
         а значение - значение столбца или список значений.
@@ -53,7 +53,7 @@ class XlsxDataSource(DataSource):
 
         :param curr_max_row: текущий максимальный индекс строки, заменят собой self.max_row
 
-        :param all: флаг, показывающий, что нужно вернуть все строки, без фильтрации
+        :param all_fields: флаг, показывающий, что нужно вернуть все строки, без фильтрации
 
         :return: Список строк прошедших фильтрацию
         """
@@ -66,15 +66,19 @@ class XlsxDataSource(DataSource):
         for row in worksheet.iter_rows(min_row=min_row, max_row=self.max_row, min_col=self.left_col,
                                        max_col=self.right_row):
             parsed_row = self.parse_row(row)
-            if all:
+            if all_fields:
                 res.append(parsed_row)
                 continue
             if filter_dict is not None:
                 for field, val in filter_dict.items():
                     if field in parsed_row:
                         if isinstance(filter_dict[field], list):
-                            if parsed_row[field] in filter_dict[field]:
-                                res.append(parsed_row)
+                            if isinstance(filter_dict[field][0], str):
+                                if str(parsed_row[field]) in filter_dict[field]:
+                                    res.append(parsed_row)
+                            elif isinstance(filter_dict[field][0], int):
+                                if parsed_row[field] in filter_dict[field]:
+                                    res.append(parsed_row)
                             continue
                         elif parsed_row[field] == val:
                             res.append(parsed_row)

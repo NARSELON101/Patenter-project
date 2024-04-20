@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from docx import Document
 from docx2pdf import convert as convert_docx_to_pdf
@@ -12,18 +13,21 @@ class LetterMaintenanceDocxTemplate(Template):
         'patent_id', 'patent_name', 'payment_order', 'payment_date', 'payment_count'
     ]
 
-    template = './docs/LetterMaintenance.docx'
+    template = './templates/docs/LetterMaintenance.docx'
 
     def get_fields(self):
         return self.__fields
 
     def fill(self, fields) -> str:
         doc = Document(self.template)
-        output_file = f"../out/Letter_maintenance_{uuid.uuid4()}.docx"
+        output_file = f"./out/Letter_maintenance_{uuid.uuid4()}.docx"
         for paragraph in doc.paragraphs:
             for key, value in fields.items():
                 for run in paragraph.runs:
                     if f'{{{{ {key} }}}}' in run.text:
+                        # TODO Добавить обработку даты из datetime
+                        if isinstance(value, datetime):
+                            value = value.strftime('%d.%m.%Y')
                         run.text = run.text.replace(f'{{{{ {key} }}}}', str(value))
 
         for table in doc.tables:
@@ -33,10 +37,14 @@ class LetterMaintenanceDocxTemplate(Template):
                         for key, value in fields.items():
                             for run in paragraph.runs:
                                 if f'{{{{ {key} }}}}' in run.text:
+                                    # TODO Добавить обработку даты из datetime
+                                    if isinstance(value, datetime):
+                                        value = value.strftime('%d.%m.%Y')
                                     run.text = run.text.replace(f'{{{{ {key} }}}}', str(value))
 
         doc.save(output_file)
         return output_file
+
 
 class LetterMaintenancePdfTemplate(LetterMaintenanceDocxTemplate):
 
