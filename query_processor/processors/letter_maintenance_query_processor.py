@@ -75,6 +75,8 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
         for field in self.__fields:
             if found_fields and field in found_fields:
                 if isinstance(found_fields[field], list):
+                    print(f"Для поля {field} указано несколько значений, без использования xlsx, "
+                          f"будет выбрано {found_fields[field][0]}")
                     res[field] = found_fields[field][0]
                 else:
                     res[field] = found_fields[field]
@@ -152,18 +154,7 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
         if "use_xlsx" in gpt_res:
             use_xlsx = gpt_res["use_xlsx"]
             if use_xlsx is not None and isinstance(use_xlsx, bool) and use_xlsx:
-                template_fields = {}
-                for field, val in res:
-                    if isinstance(val, list):
-                        print(f"Для поля {field} указано несколько значений, без использования xlsx, "
-                              f"будет выбрано {val[0]}")
-                        template_fields[field] = val[0]
-                    else:
-                        template_fields[field] = val
-                empty_fields = [field for field in self.__fields if field not in template_fields]
-                for field in empty_fields:
-                    template_fields[field] = self.__fields_default_datasource[field].get()
-                return self.template.fill(template_fields)
+                return self.get_fields_from_user(found_fields=res)
 
         payment_xlsx_path: any = gpt_res.get('payment_xlsx_path', self.__default_payment_xlsx_path)
         patent_xlsx_path: any = gpt_res.get('patent_xlsx_path', self.__default_patent_xlsx_path)
