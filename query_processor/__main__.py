@@ -1,8 +1,9 @@
+from query_processor.processors.letter_maintenance_query_processor import LetterMaintenanceQueryProcessor
 from query_processor.processors.processing_of_personal_data_query_processor import PersonalDataQueryProcessor
 from query_processor.templates.personal_data_string_template import PersonalDataStringTemplate
 
 if __name__ == '__main__':
-    processors = [PersonalDataQueryProcessor]
+    processors = [PersonalDataQueryProcessor, LetterMaintenanceQueryProcessor]
     print("Доступные процессоры: \n")
     for i, processor in enumerate(processors, start=1):
         print(i, processor.get_name())
@@ -17,7 +18,7 @@ if __name__ == '__main__':
         use_gpt = True
     else:
         use_gpt = False
-    processor = processors[which_processor](use_gpt)
+    processor = processors[which_processor](use_gpt=use_gpt)
     query = ''
     if use_gpt:
         query = input("Введите запрос для GPT: ")

@@ -6,4 +6,5 @@ from query_processor.data_source.letter_maintenance_patent_xlsx_data_source impo
 class TestLetterMaintenancePatentXLSXDataSource(TestCase):
     def test_get(self):
         datasource = LetterMaintenancePatentXlsxDataSource("./docs/LetterMaintenancePathentNTMK.xlsx")
-        datasource.get(2811313, 2800641, 2787298)
+        a = datasource.get({'patent_id': [2811313, 2800641, 2787298]})
+        print(a)
