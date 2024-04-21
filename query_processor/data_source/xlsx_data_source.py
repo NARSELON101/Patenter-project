@@ -80,7 +80,7 @@ class XlsxDataSource(DataSource):
                                 if parsed_row[field] in filter_dict[field]:
                                     res.append(parsed_row)
                             continue
-                        elif parsed_row[field] == val:
+                        elif str(parsed_row[field]) == str(val):
                             res.append(parsed_row)
             if self.filter_row(parsed_row):
                 res.append(parsed_row)

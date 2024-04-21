@@ -1,7 +1,9 @@
 import json
+import re
 from datetime import datetime
 
 from query_processor.data_source.console_data_source import ConsoleDataSource
+from query_processor.data_source.fips_fetcher_data_source import FipsFetcherDataSource
 from query_processor.data_source.letter_maintenance_patent_xlsx_data_source import LetterMaintenancePatentXlsxDataSource
 from query_processor.data_source.letter_maintenance_payment_xlsx_data_source import \
     LetterMaintenancePaymentXlsxDataSource
@@ -37,11 +39,11 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
     }
 
     __prompt = ("В документе есть эти поля:"
-                "use_xlsx - использовать ли таблицы с платёжными поручениями и патентами;",
+                "use_xlsx - использовать ли таблицы с платёжными поручениями и патентами;"
                 " payment_xlsx_path - путь к таблице с платёжными поручениями;"
                 "patent_xlsx_path - путь к таблице с патентами; "
                 "id - номер письма;"
-                "date - дата на которую заполняется письмо приведи к формату "
+                "date - дата написания письма, приведи к формату "
                 "%Y-%m-%d числами чтобы её можно было спарсить python datetime.datetime.strptime(date, '%Y-%m-%d');"
                 ";first_application - первая заявка;"
                 "timestamp - время на которое продляется патент;"
@@ -49,7 +51,7 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
                 "patent_id - номер патента;"
                 "patent_name - название патента;"
                 "payment_order - номер платёжного поручения;"
-                "payment_date - дата платёжного поручения  приведи к формату"
+                "payment_date - дата платёжного поручения когда за патент заплатили, приведи к формату"
                 " %Y-%m-%d числами чтобы её можно было спарсить python datetime.datetime.strptime(date, '%Y-%m-%d');;"
                 "payment_count - сумма платёжного поручения."
                 "Вот запрос пользователя: {query}; "
@@ -59,6 +61,8 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
                                   'payment_date', 'payment_count']
 
     __can_find_in_patent_xlsx = ['patent_id', 'patent_name']
+
+    __can_find_in_fips_fetcher = ['main_application', 'patent_id', 'patent_name']
 
     def __init__(self, template: Template | None = None, use_gpt: bool = False):
         self.template = template or self.__default_template()
@@ -111,10 +115,9 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
         gpt_ans = yagpt(user_query)
         # Получаем ответ GPT
         json_data: dict = json.loads(gpt_ans)
-        gpt_res: dict | None = json.loads(json_data.get('result', {})
-                                          .get('alternatives', [{}])[0]
-                                          .get('message', {})
-                                          .get('text'))
+        gpt_ans_txt: str = json_data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text')
+        gpt_ans_txt = re.search(r"\{[\n\s\S]*\}", gpt_ans_txt).group(0)
+        gpt_res: dict | None = json.loads(gpt_ans_txt)
         if gpt_res is None:
             print(f"Ошибка работы GPT!!!! {gpt_ans}")
             return ""
@@ -171,7 +174,7 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
                 patent_xlsx_path = patent_xlsx_path[0]
             else:
                 print(f"Не удалось получить путь к файлу с патентами: {patent_xlsx_path}")
-                patent_xlsx_path = self.__default_payment_xlsx_path
+                patent_xlsx_path = self.__default_patent_xlsx_path
 
         print("Файлы xlsx: ", payment_xlsx_path, patent_xlsx_path)
 
@@ -212,6 +215,8 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
             print("Не удалось открыть файл с патентами: ", patent_xlsx_path)
             print(e)
 
+        fips_fetcher_datasource = FipsFetcherDataSource()
+
         # Заполняем поля, которые остались пустыми в строках
         for row in rows_from_xlsx:
             # Если в строке осталось не заполненное поле
@@ -235,6 +240,7 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
                             row_from_patent = found_rows_in_patent_for_row[0]
                             for patent_field in row_from_patent:
                                 if patent_field not in row:
+                                    print(f"Заполняем поле: {patent_field} значением: {row_from_patent[patent_field]}")
                                     row[patent_field] = row_from_patent[patent_field]
                                     founded_fields_on_past_iterations.append(patent_field)
                         elif len(found_rows_in_patent_for_row) > 1:
@@ -243,15 +249,39 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
                             row_from_patent = found_rows_in_patent_for_row[0]
                             for patent_field in row_from_patent:
                                 if patent_field not in row:
+                                    print(f"Заполняем поле: {patent_field} значением: {row_from_patent[patent_field]}")
                                     row[patent_field] = row_from_patent[patent_field]
                                     founded_fields_on_past_iterations.append(patent_field)
                         elif len(found_rows_in_patent_for_row) == 0:
                             print("Ничего не нашли")
-                            print("Необходимо заполнить поле для письма с:", row)
-                            row[field] = self.__fields_default_datasource[field].get()
-                            founded_fields_on_past_iterations.append(field)
 
-                    else:
+                    # Ищем информацию о поле патента на сайте ФИПС если не нашли её до этого
+                    if field in self.__can_find_in_fips_fetcher and field not in founded_fields_on_past_iterations:
+                        patent_id = row.get("patent_id")
+                        if patent_id is not None:
+                            print("Обращение к ФИПС по номеру патента: ", patent_id)
+                            found_rows_in_fips = fips_fetcher_datasource.get(patent_id)
+                            if found_rows_in_fips is not None:
+                                if "main_application" not in row:
+                                    main_application = found_rows_in_fips.get("application_id_21")
+                                    if main_application is not None:
+                                        row["main_application"] = main_application
+                                        founded_fields_on_past_iterations.append('main_application')
+                                    else:
+                                        print("В ответе ФИПС не обнаружены поле application_id_21")
+                                if "patent_name" not in row:
+                                    patent_name = found_rows_in_fips.get("patent_name_54")
+                                    if patent_name is not None:
+                                        row["patent_name"] = patent_name
+                                        founded_fields_on_past_iterations.append('patent_name')
+                                    else:
+                                        print("В ответе ФИПС не обнаружены поле patent_name")
+
+                            else:
+                                print("Ничего не нашли")
+                        else:
+                            print("Незаполнен номер патента, обращение к ФИПС невозможно")
+                    if field not in row or row[field] is None:
                         print("Необходимо заполнить поле для письма с:", row)
                         row[field] = self.__fields_default_datasource[field].get()
 
