@@ -102,6 +102,9 @@ def get_doc(id_: int, db=FipsFetcher.default_db, rn=FipsFetcher.default_rn) -> d
 
     res['priority'] = priority[:-1]
 
+    patent_name_54 = soup.find('p', id='B542').find_next('b').text
+    res["patent_name_54"] = patent_name_54
+
     return res
 
 
