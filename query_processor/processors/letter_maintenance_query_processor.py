@@ -26,16 +26,16 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
     __default_patent_xlsx_path = './data_source/docs/LetterMaintenancePathentNTMK.xlsx'
 
     __fields_default_datasource = {
-        'id': ConsoleDataSource("Введите id письма"),
-        'date': ConsoleDataSource("Введите дату написания письма"),
-        'first_application': ConsoleDataSource("Введите номер первой  заявки в письме"),
-        'timestamp': ConsoleDataSource("Введите время на которое продляете патент"),
-        'main_application': ConsoleDataSource("Введите номер заявки на патент, который продляете"),
-        'patent_id': ConsoleDataSource("Введите номер патента, который продляете"),
-        'patent_name': ConsoleDataSource("Введите имя патент, который продляете"),
-        'payment_order': ConsoleDataSource("Введите номер платёжного поручения"),
-        'payment_date': ConsoleDataSource("Введите дату оплаты"),
-        'payment_count': ConsoleDataSource("Введите стоимость продления")
+        'id': ConsoleDataSource("Введите id письма: "),
+        'date': ConsoleDataSource("Введите дату написания письма: "),
+        'first_application': ConsoleDataSource("Введите номер первой  заявки в письме: "),
+        'timestamp': ConsoleDataSource("Введите время на которое продляете патент: "),
+        'main_application': ConsoleDataSource("Введите номер заявки на патент, который продляете: "),
+        'patent_id': ConsoleDataSource("Введите номер патента, который продляете: "),
+        'patent_name': ConsoleDataSource("Введите имя патент, который продляете: "),
+        'payment_order': ConsoleDataSource("Введите номер платёжного поручения: "),
+        'payment_date': ConsoleDataSource("Введите дату оплаты: "),
+        'payment_count': ConsoleDataSource("Введите стоимость продления: ")
     }
 
     __prompt = ("В документе есть эти поля:"
@@ -103,6 +103,9 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
         206343, 245109, 2811313 и строки с датой оплаты 02.02.2024. Добавит к этим строкам поля id 2281337,
         попробует получить поле имя патента из xlsx таблицы с патентами.
         И попросит пользователя ввести поля оставшиеся пустыми.
+
+
+        Составь письма для патента 2811313 и с датой платёжного поручения 02.02.2024
         """
 
         #  Формируем запрос к GPT
@@ -282,7 +285,6 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
                         else:
                             print("Незаполнен номер патента, обращение к ФИПС невозможно")
                     if field not in row or row[field] is None:
-                        print("Необходимо заполнить поле для письма с:", row)
                         row[field] = self.__fields_default_datasource[field].get()
 
         # Генерируем файлы
