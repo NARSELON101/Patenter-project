@@ -9,7 +9,7 @@ from query_processor.templates.template import Template
 
 class LetterMaintenanceDocxTemplate(Template):
     __fields = [
-        'date', 'id', 'first_application', 'timestamp', 'main_application',
+        'date', 'id',  'timestamp', 'main_application',
         'patent_id', 'patent_name', 'payment_order', 'payment_date', 'payment_count'
     ]
 
