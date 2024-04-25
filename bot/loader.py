@@ -1,10 +1,10 @@
-from aiogram import Bot, Dispatcher, Router
-from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram import Bot, Dispatcher
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from data.config import load_config
 
 config = load_config(".env")
 storage = MemoryStorage()
 bot = Bot(token=config.tg_bot.token, parse_mode="HTML")
-dp = Dispatcher(storage=storage)
+dp = Dispatcher(bot, storage=storage)
 
-# bot['config'] = config
+bot['config'] = config
