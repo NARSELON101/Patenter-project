@@ -4,6 +4,8 @@ from datetime import datetime
 
 from query_processor.data_source.console_data_source import ConsoleDataSource
 from query_processor.data_source.fips_fetcher_data_source import FipsFetcherDataSource
+from query_processor.data_source.letter_maintance_monitoring_data_source import \
+    LetterMaintenanceMonitoringXlsxDataSource
 from query_processor.data_source.letter_maintenance_patent_xlsx_data_source import LetterMaintenancePatentXlsxDataSource
 from query_processor.data_source.letter_maintenance_payment_xlsx_data_source import \
     LetterMaintenancePaymentXlsxDataSource
@@ -17,18 +19,18 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
     __name = 'Обслуживание писем'
     __fields = [
         'id',
-        'date', 'first_application', 'timestamp', 'main_application',
+        'date', 'timestamp', 'main_application',
         'patent_id', 'patent_name', 'payment_order', 'payment_date', 'payment_count'
     ]
 
     __default_template = LetterMaintenanceDocxTemplate
     __default_payment_xlsx_path = './data_source/docs/LetterMaintenancePayment.xlsx'
     __default_patent_xlsx_path = './data_source/docs/LetterMaintenancePathentNTMK.xlsx'
+    __default_monitoring_xlsx_path = './data_source/docs/LetterMaintenanceMonitoring.xlsx'
 
     __fields_default_datasource = {
         'id': ConsoleDataSource("Введите id письма: "),
         'date': ConsoleDataSource("Введите дату написания письма: "),
-        'first_application': ConsoleDataSource("Введите номер первой  заявки в письме: "),
         'timestamp': ConsoleDataSource("Введите время на которое продляете патент: "),
         'main_application': ConsoleDataSource("Введите номер заявки на патент, который продляете: "),
         'patent_id': ConsoleDataSource("Введите номер патента, который продляете: "),
@@ -40,6 +42,7 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
 
     __prompt = ("В документе есть эти поля:"
                 "use_xlsx - использовать ли таблицы с платёжными поручениями и патентами;"
+                "monitoring_xlsx_path - путь к таблице с мониторингом;"
                 " payment_xlsx_path - путь к таблице с платёжными поручениями;"
                 "patent_xlsx_path - путь к таблице с патентами; "
                 "id - номер письма;"
@@ -63,6 +66,8 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
     __can_find_in_patent_xlsx = ['patent_id', 'patent_name']
 
     __can_find_in_fips_fetcher = ['main_application', 'patent_id', 'patent_name']
+
+    __can_find_in_monitoring_xlsx = ['patent_name', 'main_application', 'timestamp', 'payment_count']
 
     def __init__(self, template: Template | None = None, use_gpt: bool = False):
         self.template = template or self.__default_template()
@@ -144,7 +149,8 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
                 print(f"Gpt обнаружил поле {field} - {fild_from_gpt}")
                 # Если это поле не является фильтром, то оно должно содержать только 1 значение
                 if (field not in self.__can_find_in_patent_xlsx and
-                        field not in self.__can_find_in_payment_xlsx):
+                        field not in self.__can_find_in_payment_xlsx and
+                        field not in self.__can_find_in_monitoring_xlsx):
                     if isinstance(fild_from_gpt, list):
                         if len(fild_from_gpt) > 1:
                             print("Это поле не является фильтром, но содержит несколько значений: ", field,
@@ -164,6 +170,7 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
 
         payment_xlsx_path: any = gpt_res.get('payment_xlsx_path', self.__default_payment_xlsx_path)
         patent_xlsx_path: any = gpt_res.get('patent_xlsx_path', self.__default_patent_xlsx_path)
+        monitoring_xlsx_path: any = gpt_res.get('monitoring_xlsx_path', self.__default_monitoring_xlsx_path)
 
         if not isinstance(payment_xlsx_path, str):
             if isinstance(payment_xlsx_path, list):
@@ -179,7 +186,14 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
                 print(f"Не удалось получить путь к файлу с патентами: {patent_xlsx_path}")
                 patent_xlsx_path = self.__default_patent_xlsx_path
 
-        print("Файлы xlsx: ", payment_xlsx_path, patent_xlsx_path)
+        if not isinstance(monitoring_xlsx_path, str):
+            if isinstance(monitoring_xlsx_path, list):
+                monitoring_xlsx_path = monitoring_xlsx_path[0]
+            else:
+                print(f"Не удалось получить путь к файлу с платёжными поручениями: {monitoring_xlsx_path}")
+                monitoring_xlsx_path = self.__default_monitoring_xlsx_path
+
+        print("Файлы xlsx: ", payment_xlsx_path, patent_xlsx_path, monitoring_xlsx_path)
 
         # Ищем в xlsx с платёжными поручения строки по которые подходят под фильтры указанные пользователем
         rows_from_xlsx = []
@@ -216,6 +230,13 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
             patent_datasource = LetterMaintenancePatentXlsxDataSource(patent_xlsx_path)
         except Exception as e:
             print("Не удалось открыть файл с патентами: ", patent_xlsx_path)
+            print(e)
+
+        monitoring_datasource: None | LetterMaintenanceMonitoringXlsxDataSource = None
+        try:
+            monitoring_datasource = LetterMaintenanceMonitoringXlsxDataSource(monitoring_xlsx_path)
+        except Exception as e:
+            print("Не удалось открыть файл с патентами: ", monitoring_xlsx_path)
             print(e)
 
         fips_fetcher_datasource = FipsFetcherDataSource()
@@ -257,6 +278,25 @@ class LetterMaintenanceQueryProcessor(QueryProcessor):
                                     founded_fields_on_past_iterations.append(patent_field)
                         elif len(found_rows_in_patent_for_row) == 0:
                             print("Ничего не нашли")
+
+                    if field in self.__can_find_in_monitoring_xlsx and field not in founded_fields_on_past_iterations:
+                        print("Ищем в xlsx с мониторингом")
+                        found_rows = monitoring_datasource.get(filter_dict={'patent_id': row['patent_id']})
+                        new_data: None | dict = None
+                        if isinstance(found_rows, list):
+                            if len(found_rows) == 0:
+                                print("Ничего не нашли")
+                            else:
+                                print("Найдено несколько строк с мониторингом: ", found_rows)
+                                print("Используется первая строка: ", found_rows[0])
+                                new_data = found_rows[0]
+                        if new_data is not None:
+                            for monitoring_field in new_data:
+                                if monitoring_field not in row:
+                                    founded_fields_on_past_iterations.append(monitoring_field)
+                                    print("В файле с мониторингом обнаруженною поле : ", monitoring_field)
+                                    row[monitoring_field] = new_data[monitoring_field]
+
 
                     # Ищем информацию о поле патента на сайте ФИПС если не нашли её до этого
                     if field in self.__can_find_in_fips_fetcher and field not in founded_fields_on_past_iterations:
