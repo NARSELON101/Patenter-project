@@ -1,4 +1,4 @@
-from utils.models import User
+from bot.utils.database import User
 from aiogram import types
 
 async def get_user():

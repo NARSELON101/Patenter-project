@@ -1,9 +1,19 @@
+import datetime
 from gino import Gino
-from loader import config
+from bot.loader import config
+from sqlalchemy import (Column, Integer, String, DateTime, ARRAY)
 
-db = Gino()
+
+datab = Gino()
+
+class User(datab.Model):
+    __tablename__ = "users"
+    id = Column(Integer, autoincrement=True, primary_key=True, unique=True)
+    telegram_id = Column(Integer, default=0)
+    registation_date = Column(DateTime, default=datetime.datetime.now())
+
 
 async def create_db():
-    await db.set_bind(config.db.postgres_uri)
+    await datab.set_bind(config.db.postgres_uri)
 
-    await db.gino.create_all()
+    await datab.gino.create_all()
