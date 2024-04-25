@@ -1,11 +1,12 @@
 
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.markdown import hbold, hcode, hlink
-from bot.keyboards import inline, reply
-import bot.utils.db_commands as db
-from bot.misc.states import CreateDocument
+from aiogram.types import Message, CallbackQuery
+from aiogram.utils.markdown import hcode
+from keyboards import inline
+from keyboards import reply
+import utils.db_commands as db
+from misc.states import CreateDocument
 
 async def user_start(messasge: Message, state: FSMContext) -> None:
     await state.reset_state()
