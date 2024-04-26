@@ -44,7 +44,7 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(user_start, text="Отмена", state="*")
     dp.register_message_handler(create_document, text="Создать документ", state="*")
 
-    dp.register_callback_query_handler(push_data, inline.processor.filter(action="get_processor"),
+    dp.register_callback_query_handler(select_use_yandex_gpt, inline.processor.filter(action="get_processor"),
                                        state=CreateDocument.Processor)
-    dp.register_callback_query_handler(select_use_yandex_gpt, inline.yandex_gpt.filter(action="get_yagpt"),
+    dp.register_callback_query_handler(push_data, inline.yandex_gpt.filter(action="get_yagpt"),
                                        state=CreateDocument.UseYandexGPT)
