@@ -1,5 +1,6 @@
 from aiogram.dispatcher.middlewares import LifetimeControllerMiddleware
 
+
 class EnvironmentMiddleware(LifetimeControllerMiddleware):
     skip_patterns = ["error", "update"]
 
