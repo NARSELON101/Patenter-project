@@ -22,11 +22,11 @@ async def main():
     )
     logger.info("Starting bot")
 
-    register_all_middlewares(dp, config)
+    #register_all_middlewares(dp, config)
     register_all_handlers(dp)
     await create_db()
     try:
-        await dp.start_polling(bot)
+        await dp.start_polling(bot, allowed_updates=['message', 'callback_query'])
     finally:
         await dp.storage.close()
         await dp.storage.wait_closed()
