@@ -17,7 +17,6 @@ from query_processor.gpt.yagpt import yagpt
 from query_processor.processors.processor import QueryProcessor
 from query_processor.templates.letter_maintenance_template import LetterMaintenanceDocxTemplate
 from query_processor.templates.template import Template
-from utils.telegram_input import telegram_input
 
 logger = logging.getLogger(__name__)
 
@@ -85,18 +84,6 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
     @staticmethod
     def get_name():
         return LetterMaintenanceTelegramQueryProcessor.__name
-
-    async def async_communicate_with_user(self, prompt: str, *args, **kwargs):
-        bot = self.tg_dispatcher.bot
-        state = self.tg_dispatcher.current_state()
-        if args is not None:
-            sep = ' '
-            if kwargs is not None:
-                sep = kwargs.get('sep', ' ')
-            for arg in args:
-                prompt += sep
-                prompt += str(arg)
-        return await self.tg_dispatcher.bot.send_message(state.chat, prompt)
 
     async def get_fields_from_user(self, found_fields: dict | None = None):
         # TODO Если в одном из полей несколько значений, то нужно сгенерировать несколько файлов или переспросить об
