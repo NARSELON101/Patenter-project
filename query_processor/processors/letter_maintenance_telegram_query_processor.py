@@ -150,9 +150,12 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
             raise RuntimeError("Не передан запрос!")
 
         #  Отправляем запрос к GPT
-        gpt_ans = yagpt(user_query)
+        gpt_ans = await yagpt(user_query)
         # Получаем ответ GPT
         json_data: dict = json.loads(gpt_ans)
+
+        logger.info(f"{self.__name} Ответ GPT: {json.dumps(json_data, indent=4)}")
+
         gpt_ans_txt: str = json_data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text')
         gpt_ans_txt = re.search(r"\{[\n\s\S]*\}", gpt_ans_txt).group(0)
         gpt_res: dict | None = json.loads(gpt_ans_txt)
