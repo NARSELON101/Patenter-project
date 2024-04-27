@@ -1,7 +1,6 @@
+import inspect
 import json
 import logging
-import inspect
-
 
 from query_processor.data_source.date_now_data_source import DateNowDataSource
 from query_processor.data_source.source import DataSource
@@ -9,8 +8,6 @@ from query_processor.data_source.telegram_data_source import TelegramDataSource
 from query_processor.gpt.yagpt import yagpt
 from query_processor.processors.processor import QueryProcessor
 from query_processor.templates.personal_data_string_template import PersonalDataStringTemplate
-
-
 
 logger = logging.getLogger(__name__)
 

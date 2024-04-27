@@ -63,7 +63,7 @@ async def get_user_query_for_gpt(message: Message, state: FSMContext) -> None:
     query_processor = data.get('query_processor')
     bot = Dispatcher.get_current().bot
 
-    await bot.send_message(chat_id=state.chat, text="Обращение к yagpt может займёт некоторое время",
+    await bot.send_message(chat_id=state.chat, text="Обращение к yagpt займёт некоторое время",
                            reply_markup=await reply.cancel_menu())
     await init_process_query(bot, query, True, query_processor, state)
 
