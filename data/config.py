@@ -17,6 +17,7 @@ class TgBot:
 class YaGPT:
     catalog_id: str
     api_key: str
+    time_to_sleep: float
 
 
 @dataclass
@@ -48,7 +49,8 @@ def load_config(path: str = None):
         ),
         ya_gpt=YaGPT(
           catalog_id=env.str("YAGPT_CATALOG_ID"),
-          api_key=env.str("YAGPT_API_KEY")
+          api_key=env.str("YAGPT_API_KEY"),
+          time_to_sleep=env.float("YAGPT_TIME_TO_SLEEP")
         ),
         debug=env.bool("DEBUG", False),
     )
