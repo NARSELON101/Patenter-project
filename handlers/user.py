@@ -33,7 +33,7 @@ async def create_document(message: Message, state: FSMContext) -> None:
     await CreateDocument.Processor.set()
 
 
-@dp.message_handler(state=CreateDocument.GetInput)
+# @dp.message_handler(state=CreateDocument.GetInput)
 async def process_input(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     await state.update_data(telegram_input=message.text)
@@ -43,7 +43,7 @@ async def process_input(message: Message, state: FSMContext) -> None:
     await CreateDocument.ProcessQuery.set()
 
 
-@dp.message_handler(state=CreateDocument.GetUserQueryForGpt)
+# @dp.message_handler(state=CreateDocument.GetUserQueryForGpt)
 async def get_user_query_for_gpt(message: Message, state: FSMContext) -> None:
     query = message.text
     data = await state.get_data()
@@ -60,9 +60,10 @@ async def select_use_yandex_gpt(call: CallbackQuery, state: FSMContext, callback
     data = await state.get_data()
     query_processor = data.get('query_processor')
     if chosen_use_yagpt:
-        await bot.send_message(chat_id=state.chat, text="Введите запрос для GPT: ")
+        await bot.send_message(chat_id=state.chat, text="Введите запрос для GPT: ", reply_markup=await reply.cancel_menu())
         await CreateDocument.GetUserQueryForGpt.set()
     else:
+        await call.message.answer("Начинаю обработку...", reply_markup=await reply.cancel_menu())
         await process_query(bot, query_processor, state.chat, use_gpt=chosen_use_yagpt)
 
 
@@ -96,7 +97,11 @@ def register_user(dp: Dispatcher):
     dp.register_message_handler(user_start, text="Отмена", state="*")
     dp.register_message_handler(create_document, text="Создать документ", state="*")
 
+
     dp.register_callback_query_handler(select_query_processor, inline.processor.filter(action="get_processor"),
                                        state=CreateDocument.Processor)
     dp.register_callback_query_handler(select_use_yandex_gpt, inline.yandex_gpt.filter(action="get_yagpt"),
                                        state=CreateDocument.UseYandexGPT)
+    dp.register_message_handler(get_user_query_for_gpt, state=CreateDocument.GetUserQueryForGpt)
+    dp.register_message_handler(process_input, state=CreateDocument.GetInput)
+
