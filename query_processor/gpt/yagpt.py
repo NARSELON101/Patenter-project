@@ -1,11 +1,31 @@
+import asyncio
 import logging
+import time
 
 import aiohttp
-import requests
 
 from loader import config
 
 logger = logging.getLogger(__name__)
+
+prev_req_time: float | None = None
+
+
+class YaGptTimer:
+
+    def __init__(self, time_to_sleep=None):
+        self.time_to_sleep = time_to_sleep or config.ya_gpt.time_to_sleep
+        self.prev_req_time = None
+
+    async def __aenter__(self):
+        current_time = time.time()
+        if True or self.prev_req_time is not None:
+            while True or current_time - self.prev_req_time < self.time_to_sleep:
+                await asyncio.sleep(self.time_to_sleep)
+        self.prev_req_time = current_time
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 async def yagpt(query):

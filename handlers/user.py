@@ -10,6 +10,8 @@ import utils.db_commands as db
 from keyboards import inline
 from keyboards import reply
 from misc.states import CreateDocument
+from query_processor.gpt.yagpt import YaGptTimer
+from query_processor.processors.processor import QueryProcessor
 from utils import telegram_input
 
 logger = logging.getLogger(__name__)
@@ -30,6 +32,8 @@ async def user_cancel_query_processing(message: Message, state: FSMContext) -> N
     query_process_task_index = data.get('query_process_task_index')
     # Если это пользователь не начал обработку запроса, то отменять нечего
     if query_process_task_index is None:
+        await CreateDocument.Processor.set()
+        await message.answer("Привет!", reply_markup=await reply.start_menu())
         return
     query_process_task = query_process_tasks[query_process_task_index]
     query_process_task.cancel()
@@ -58,9 +62,25 @@ async def get_user_query_for_gpt(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     query_processor = data.get('query_processor')
     bot = Dispatcher.get_current().bot
-    task = asyncio.create_task(process_query(bot, query_processor, state.chat, use_gpt=True, query_gpt=query))
-    query_process_tasks[state.chat] = task
+
+    await bot.send_message(chat_id=state.chat, text="Обращение к yagpt может займёт некоторое время",
+                           reply_markup=await reply.cancel_menu())
+    await init_process_query(bot, query, True, query_processor, state)
+
+
+async def init_process_query(bot, query, use_gpt, query_processor: QueryProcessor, state):
+    # Запоминаем текущую задачу, чтобы если пользователь отменит запрос, то мы могли её отменить
+    current_task = asyncio.current_task()
+    current_task.set_name(f"Process_query {query_processor.get_name()} for {state.chat}")
+    query_process_tasks[state.chat] = asyncio.current_task()
     await state.update_data(query_process_task_index=state.chat)
+    if use_gpt:
+        # Необходимо подождать минимум минут после каждого обращения к yagpt, таску, которая
+        # захотела обратиться к yagpt в перерыв, ставим на паузу на YAGPT_TIME_TO_SLEEP секунд
+        async with YaGptTimer():
+            await process_query(bot, query_processor, state.chat, use_gpt=use_gpt, query_gpt=query)
+    else:
+        await process_query(bot, query_processor, state.chat, use_gpt=use_gpt, query_gpt=query)
 
 
 async def select_use_yandex_gpt(call: CallbackQuery, state: FSMContext, callback_data: dict | None = None) -> None:
@@ -76,9 +96,8 @@ async def select_use_yandex_gpt(call: CallbackQuery, state: FSMContext, callback
                                reply_markup=await reply.cancel_menu())
         await CreateDocument.GetUserQueryForGpt.set()
     else:
-        task = asyncio.create_task(process_query(bot, query_processor, state.chat, use_gpt=chosen_use_yagpt))
-        query_process_tasks[state.chat] = task
-        await state.update_data(query_process_task_index=state.chat)
+        async with YaGptTimer():
+            await init_process_query(bot, "", False, query_processor, state)
 
 
 async def process_query(bot, query_processor, chat, use_gpt: bool = False, query_gpt: str | None = None):
@@ -90,10 +109,14 @@ async def process_query(bot, query_processor, chat, use_gpt: bool = False, query
         logger.error(f"Возникла ошибка при обработке запроса: {e}")
     if result_files is not None:
         await bot.send_message(chat_id=chat, text=f"Результат: {result_files}")
-        for result_file in result_files:
-            await bot.send_document(chat_id=chat, document=open(result_file, 'rb'))
+        # Если вернулся список предполагаем, что это список сгенерированных файлов
+        if isinstance(result_files, list):
+            for result_file in result_files:
+                await bot.send_document(chat_id=chat, document=open(result_file, 'rb'))
     else:
         await bot.send_message(chat_id=chat, text=f"Ошибка при обработке запроса")
+
+    await CreateDocument.Processor.set()
 
 
 async def select_query_processor(call: CallbackQuery, callback_data: dict, state: FSMContext) -> None:
@@ -116,4 +139,3 @@ def register_user(dp: Dispatcher):
                                        state=CreateDocument.UseYandexGPT)
     dp.register_message_handler(get_user_query_for_gpt, state=CreateDocument.GetUserQueryForGpt)
     dp.register_message_handler(process_input, state=CreateDocument.GetInput)
-
