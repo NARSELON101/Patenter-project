@@ -18,5 +18,5 @@ class Files(db.Model):
 class Request_history(db.Model):
     __tablename__ = "request_history"
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.telegram_id"), default=0)
+    user_id = Column(Integer, ForeignKey("users.id"), default=0)
     request = Column(String, default="")
