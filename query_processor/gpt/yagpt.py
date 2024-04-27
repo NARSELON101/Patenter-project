@@ -19,8 +19,8 @@ class YaGptTimer:
 
     async def __aenter__(self):
         current_time = time.time()
-        if True or self.prev_req_time is not None:
-            while True or current_time - self.prev_req_time < self.time_to_sleep:
+        if self.prev_req_time is not None:
+            while current_time - self.prev_req_time < self.time_to_sleep:
                 await asyncio.sleep(self.time_to_sleep)
         self.prev_req_time = current_time
 
