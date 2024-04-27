@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import traceback
 
 from aiogram import Dispatcher
 from aiogram.dispatcher import FSMContext
@@ -9,6 +10,7 @@ import query_processor as qp
 import utils.db_commands as db
 from keyboards import inline
 from keyboards import reply
+from loader import config
 from misc.states import CreateDocument
 from query_processor.processors.processor import QueryProcessor
 from utils import telegram_input
@@ -36,6 +38,7 @@ async def user_cancel_query_processing(message: Message, state: FSMContext) -> N
         return
     query_process_task = query_process_tasks[query_process_task_index]
     query_process_task.cancel()
+    del query_process_tasks[query_process_task_index]
     await message.reply("Запрос отменён", reply_markup=await reply.start_menu())
     await CreateDocument.Processor.set()
 
@@ -104,6 +107,9 @@ async def process_query(bot, query_processor, chat, use_gpt: bool = False, query
         result_files: list[str] | None = await query_processor(use_gpt=use_gpt).async_process_query(query_gpt)
     except Exception as e:
         logger.error(f"Возникла ошибка при обработке запроса: {e}")
+        if config.debug:
+            await bot.send_message(chat_id=chat,
+                                   text=f"Возникла ошибка при обработке запроса: {e} \n {traceback.format_exc()}")
     if result_files is not None:
         await bot.send_message(chat_id=chat, text=f"Результат: {result_files}", reply_markup=await reply.start_menu())
         # Если вернулся список предполагаем, что это список сгенерированных файлов
