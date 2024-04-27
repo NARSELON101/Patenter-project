@@ -9,6 +9,7 @@ from query_processor.data_source.source import DataSource
 from query_processor.data_source.telegram_data_source import TelegramDataSource
 from query_processor.gpt.yagpt import yagpt
 from query_processor.processors.processor import QueryProcessor
+from query_processor.templates.personal_data_docx_template import PersonalDataDocxTemplate
 from query_processor.templates.personal_data_string_template import PersonalDataStringTemplate
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ class PersonalDataTelegramQueryProcessor(QueryProcessor):
         return PersonalDataTelegramQueryProcessor.__name
 
     def __init__(self, use_gpt: bool):
-        self.template = PersonalDataStringTemplate()
+        self.template = PersonalDataDocxTemplate()
         self.use_gpt: bool = use_gpt
         self.tg_dispatcher = Dispatcher.get_current()
 
@@ -87,4 +88,4 @@ class PersonalDataTelegramQueryProcessor(QueryProcessor):
                 if inspect.isawaitable(res[field]):
                     res[field] = await res[field]
 
-        return self.template.fill(res)
+        return [self.template.fill(res)]
