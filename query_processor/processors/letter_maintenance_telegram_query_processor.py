@@ -144,6 +144,8 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
         logger.info(f"{self.__name} Ответ GPT: {json.dumps(json_data, indent=4)}")
 
         gpt_ans_txt: str = json_data.get('result', {}).get('alternatives', [{}])[0].get('message', {}).get('text')
+        if gpt_ans_txt is None:
+            raise RuntimeError(f"Не удалось получить ответ от GPT: {gpt_ans}")
         gpt_ans_txt = re.search(r"\{[\n\s\S]*\}", gpt_ans_txt).group(0)
         gpt_res: dict | None = json.loads(gpt_ans_txt)
         if gpt_res is None:
