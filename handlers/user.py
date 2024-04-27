@@ -107,13 +107,15 @@ async def process_query(bot, query_processor, chat, use_gpt: bool = False, query
     except Exception as e:
         logger.error(f"Возникла ошибка при обработке запроса: {e}")
     if result_files is not None:
-        await bot.send_message(chat_id=chat, text=f"Результат: {result_files}")
+        await bot.send_message(chat_id=chat, text=f"Результат: {result_files}", reply_markup=await reply.start_menu())
         # Если вернулся список предполагаем, что это список сгенерированных файлов
         if isinstance(result_files, list):
             for result_file in result_files:
-                await bot.send_document(chat_id=chat, document=open(result_file, 'rb'))
+                await bot.send_document(chat_id=chat, document=open(result_file, 'rb'),
+                                        reply_markup=await reply.start_menu())
     else:
-        await bot.send_message(chat_id=chat, text=f"Ошибка при обработке запроса")
+        await bot.send_message(chat_id=chat, text=f"Ошибка при обработке запроса",
+                               reply_markup=await reply.start_menu())
 
     await CreateDocument.Processor.set()
 
