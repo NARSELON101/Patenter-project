@@ -2,6 +2,8 @@ import inspect
 import json
 import logging
 
+from aiogram import Dispatcher
+
 from query_processor.data_source.date_now_data_source import DateNowDataSource
 from query_processor.data_source.source import DataSource
 from query_processor.data_source.telegram_data_source import TelegramDataSource
@@ -50,6 +52,7 @@ class PersonalDataTelegramQueryProcessor(QueryProcessor):
     def __init__(self, use_gpt: bool):
         self.template = PersonalDataStringTemplate()
         self.use_gpt: bool = use_gpt
+        self.tg_dispatcher = Dispatcher.get_current()
 
     async def async_process_query(self, query: str):
         res = {}
