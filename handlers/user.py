@@ -10,7 +10,6 @@ import utils.db_commands as db
 from keyboards import inline
 from keyboards import reply
 from misc.states import CreateDocument
-from query_processor.gpt.yagpt import YaGptTimer
 from query_processor.processors.processor import QueryProcessor
 from utils import telegram_input
 
@@ -76,8 +75,8 @@ async def init_process_query(bot, query, use_gpt, query_processor: QueryProcesso
     if use_gpt:
         # Необходимо подождать минимум минут после каждого обращения к yagpt, таску, которая
         # захотела обратиться к yagpt в перерыв, ставим на паузу на YAGPT_TIME_TO_SLEEP секунд
-        async with YaGptTimer():
-            await process_query(bot, query_processor, state.chat, use_gpt=use_gpt, query_gpt=query)
+        await CreateDocument.WaitForYandexGPT.set()
+        await process_query(bot, query_processor, state.chat, use_gpt=use_gpt, query_gpt=query)
     else:
         await process_query(bot, query_processor, state.chat, use_gpt=use_gpt, query_gpt=query)
 
@@ -95,8 +94,7 @@ async def select_use_yandex_gpt(call: CallbackQuery, state: FSMContext, callback
                                reply_markup=await reply.cancel_menu())
         await CreateDocument.GetUserQueryForGpt.set()
     else:
-        async with YaGptTimer():
-            await init_process_query(bot, "", False, query_processor, state)
+        await init_process_query(bot, "", False, query_processor, state)
 
 
 async def process_query(bot, query_processor, chat, use_gpt: bool = False, query_gpt: str | None = None):

@@ -5,5 +5,6 @@ class CreateDocument(StatesGroup):
     Processor = State()
     GetInput = State()
     UseYandexGPT = State()
+    WaitForYandexGPT = State()
     ProcessQuery = State()
     GetUserQueryForGpt = State()
