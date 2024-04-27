@@ -1,5 +1,4 @@
 import asyncio
-import random
 
 from aiogram import Dispatcher
 
@@ -8,11 +7,15 @@ from misc.states import CreateDocument
 telegram_input_locks = dict()
 
 
+class TelegramInput:
+    reply_markup = None
+
+
 async def telegram_input(prompt: str) -> str:
     dp = Dispatcher.get_current()
     bot = dp.bot
     state = dp.current_state()
-    await bot.send_message(chat_id=state.chat, text=prompt)
+    await bot.send_message(chat_id=state.chat, text=prompt, reply_markup=TelegramInput.reply_markup)
     await CreateDocument.GetInput.set()
     lock = asyncio.Lock()
     telegram_input_locks[state.chat] = lock
