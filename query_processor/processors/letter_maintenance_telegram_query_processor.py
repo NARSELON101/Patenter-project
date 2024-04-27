@@ -4,6 +4,8 @@ import logging
 import re
 from datetime import datetime
 
+from aiogram import Dispatcher
+
 from query_processor.data_source.fips_fetcher_data_source import FipsFetcherDataSource
 from query_processor.data_source.letter_maintance_monitoring_data_source import \
     LetterMaintenanceMonitoringXlsxDataSource
@@ -76,6 +78,7 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
     __can_find_in_monitoring_xlsx = ['patent_name', 'main_application', 'timestamp', 'payment_count']
 
     def __init__(self, template: Template | None = None, use_gpt: bool = False):
+        self.tg_dispatcher = Dispatcher.get_current()
         self.template = template or self.__default_template()
         self.use_gpt = use_gpt
 
@@ -84,7 +87,16 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
         return LetterMaintenanceTelegramQueryProcessor.__name
 
     async def async_communicate_with_user(self, prompt: str, *args, **kwargs):
-        return await telegram_input(prompt)
+        bot = self.tg_dispatcher.bot
+        state = self.tg_dispatcher.current_state()
+        if args is not None:
+            sep = ' '
+            if kwargs is not None:
+                sep = kwargs.get('sep', ' ')
+            for arg in args:
+                prompt += sep
+                prompt += str(arg)
+        return await self.tg_dispatcher.bot.send_message(state.chat, prompt)
 
     async def get_fields_from_user(self, found_fields: dict | None = None):
         # TODO Если в одном из полей несколько значений, то нужно сгенерировать несколько файлов или переспросить об
@@ -271,7 +283,7 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
         for row in rows_from_xlsx:
             # Если в строке осталось не заполненное поле
             empty_fields = [field for field in self.__fields if field not in row]
-            founded_fields_on_past_iterations: list = []
+            founded_fields_on_past_iterations: list = list(row.keys())
             if len(empty_fields) != 0:
                 await self.async_communicate_with_user("Не все поля заполнены в строке: ", row)
                 for field in empty_fields:
@@ -360,7 +372,7 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
                             await self.async_communicate_with_user(
                                 "Незаполнен номер патента, обращение к ФИПС невозможно")
                     if field not in row or row[field] is None:
-                        row[field] = self.__fields_default_datasource[field].get()
+                        row[field] = await self.__fields_default_datasource[field].get()
 
         # Генерируем файлы
         res_files = []
