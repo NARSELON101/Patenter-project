@@ -9,7 +9,7 @@ from query_processor.templates.personal_data_string_template import PersonalData
 
 
 class PersonalDataQueryProcessor(QueryProcessor):
-    __name = 'Процессор для Соглашения об обработке персональных данных'
+    __name = 'Соглашения об обработке персональных данных'
     fields_data_source: dict[str, DataSource] = {
         'name': ConsoleDataSource('Введите имя: '),
         'address': ConsoleDataSource('Введите адрес места жительства: '),
