@@ -15,9 +15,8 @@ async def telegram_input(prompt: str) -> str:
     await bot.send_message(chat_id=state.chat, text=prompt)
     await CreateDocument.GetInput.set()
     lock = asyncio.Lock()
-    telegram_input_lock_index = random.Random().randint(0, 1000000)
-    telegram_input_locks[telegram_input_lock_index] = lock
-    await state.update_data(telegram_input_lock_index=telegram_input_lock_index)
+    telegram_input_locks[state.chat] = lock
+    await state.update_data(telegram_input_lock_index=state.chat)
     await lock.acquire()
     pass
     async with lock:
