@@ -2,7 +2,7 @@ import asyncio
 
 from query_processor import telegram
 from query_processor.processors.letter_maintenance_telegram_query_processor import LetterMaintenanceTelegramQueryProcessor
-from query_processor.processors.processing_of_personal_data_query_processor import PersonalDataQueryProcessor
+from query_processor.processors.processing_of_personal_telegram_data_query_processor import PersonalDataTelegramQueryProcessor
 
 
 def from_console(processors):
@@ -31,8 +31,7 @@ def from_telegram(processors):
 
 
 def main():
-    processors = [PersonalDataQueryProcessor, LetterMaintenanceTelegramQueryProcessor]
-    from_console(processors)
+    raise NotImplemented()
 
 
 if __name__ == '__main__':
