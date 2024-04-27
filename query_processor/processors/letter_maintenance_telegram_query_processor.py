@@ -29,9 +29,9 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
     ]
 
     __default_template = LetterMaintenanceDocxTemplate
-    __default_payment_xlsx_path = './data_source/docs/LetterMaintenancePayment.xlsx'
-    __default_patent_xlsx_path = './data_source/docs/LetterMaintenancePathentNTMK.xlsx'
-    __default_monitoring_xlsx_path = './data_source/docs/LetterMaintenanceMonitoring.xlsx'
+    __default_payment_xlsx_path = './query_processor/data_source/docs/LetterMaintenancePayment.xlsx'
+    __default_patent_xlsx_path = './query_processor/data_source/docs/LetterMaintenancePathentNTMK.xlsx'
+    __default_monitoring_xlsx_path = './query_processor/data_source/docs/LetterMaintenanceMonitoring.xlsx'
 
     __fields_default_datasource = {
         'id': TelegramDataSource("Введите id письма: "),
@@ -146,7 +146,7 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
         gpt_res: dict | None = json.loads(gpt_ans_txt)
         if gpt_res is None:
             await self.async_communicate_with_user(f"Ошибка работы GPT!!!! {gpt_ans}")
-            return ""
+            return []
 
         # Обрабатываем полученные данные
         # Список полей которые не являются фильтрами для поиска строк в xlsx
