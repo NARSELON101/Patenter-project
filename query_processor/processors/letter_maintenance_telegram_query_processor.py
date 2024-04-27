@@ -2,10 +2,12 @@ import json
 import json
 import logging
 import re
+import traceback
 from datetime import datetime
 
 from aiogram import Dispatcher
 
+from loader import config
 from query_processor.data_source.fips_fetcher_data_source import FipsFetcherDataSource
 from query_processor.data_source.letter_maintance_monitoring_data_source import \
     LetterMaintenanceMonitoringXlsxDataSource
@@ -98,7 +100,7 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
                             f"будет выбрано {found_fields[field][0]}")
                     except AttributeError as e:
                         logger.error(f"Невозможно общаться с пользователем: {e}")
-                        return None
+                        raise
                     res[field] = found_fields[field][0]
                 else:
                     res[field] = found_fields[field]
@@ -242,7 +244,8 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
         except Exception as e:
             await self.async_communicate_with_user("Не удалось открыть файл с платёжными поручениями: ",
                                                    payment_xlsx_path)
-            await self.async_communicate_with_user(e)
+            if config.debug:
+                await self.async_communicate_with_user(traceback.format_exc())
 
         # Если пользователь не указал поля по которым можно было бы найти строки в xlsx,
         # то просим пользователя заполнить все поля самому
@@ -260,14 +263,16 @@ class LetterMaintenanceTelegramQueryProcessor(QueryProcessor):
             patent_datasource = LetterMaintenancePatentXlsxDataSource(patent_xlsx_path)
         except Exception as e:
             await self.async_communicate_with_user("Не удалось открыть файл с патентами: ", patent_xlsx_path)
-            await self.async_communicate_with_user(e)
+            if config.debug:
+                await self.async_communicate_with_user(traceback.format_exc())
 
         monitoring_datasource: None | LetterMaintenanceMonitoringXlsxDataSource = None
         try:
             monitoring_datasource = LetterMaintenanceMonitoringXlsxDataSource(monitoring_xlsx_path)
         except Exception as e:
             await self.async_communicate_with_user("Не удалось открыть файл с патентами: ", monitoring_xlsx_path)
-            await self.async_communicate_with_user(e)
+            if config.debug:
+                await self.async_communicate_with_user(traceback.format_exc())
 
         fips_fetcher_datasource = FipsFetcherDataSource()
 
