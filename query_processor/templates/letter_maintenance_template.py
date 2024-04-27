@@ -13,14 +13,14 @@ class LetterMaintenanceDocxTemplate(Template):
         'patent_id', 'patent_name', 'payment_order', 'payment_date', 'payment_count'
     ]
 
-    template = './templates/docs/LetterMaintenance.docx'
+    template = './query_processor/templates/docs/LetterMaintenance.docx'
 
     def get_fields(self):
         return self.__fields
 
     def fill(self, fields) -> str:
         doc = Document(self.template)
-        output_file = f"./out/Letter_maintenance_{uuid.uuid4()}.docx"
+        output_file = f"./query_processor/out/Letter_maintenance_{uuid.uuid4()}.docx"
         for paragraph in doc.paragraphs:
             for key, value in fields.items():
                 for run in paragraph.runs:
