@@ -59,11 +59,11 @@ async def select_use_yandex_gpt(call: CallbackQuery, state: FSMContext, callback
     bot = Dispatcher.get_current().bot
     data = await state.get_data()
     query_processor = data.get('query_processor')
+    await call.message.answer("Начинаю обработку...", reply_markup=await reply.cancel_menu())
     if chosen_use_yagpt:
         await bot.send_message(chat_id=state.chat, text="Введите запрос для GPT: ", reply_markup=await reply.cancel_menu())
         await CreateDocument.GetUserQueryForGpt.set()
     else:
-        await call.message.answer("Начинаю обработку...", reply_markup=await reply.cancel_menu())
         await process_query(bot, query_processor, state.chat, use_gpt=chosen_use_yagpt)
 
 
