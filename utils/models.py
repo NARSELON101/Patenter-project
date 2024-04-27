@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import (Column, Integer, DateTime, JSON, String)
+from sqlalchemy import (Column, Integer, DateTime, JSON, String, ForeignKey)
 from utils.database import db
 
 
@@ -13,4 +13,10 @@ class Files(db.Model):
     __tablename__ = "available_files"
     id = Column(Integer, primary_key=True)
     file_path = Column(String, default="")
-    file = Column(JSON) #default
+    file = Column(JSON, default=lambda: {})
+
+class Request_history(db.Model):
+    __tablename__ = "request_history"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.telegram_id"), default=0)
+    request = Column(String, default="")
