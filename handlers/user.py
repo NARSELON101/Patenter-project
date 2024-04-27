@@ -50,10 +50,9 @@ async def create_document(message: Message, state: FSMContext) -> None:
 
 async def process_input(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
-    await state.update_data(telegram_input=message.text)
-    telegram_input_lock_index: int = data.get("telegram_input_lock_index")
-    lock: asyncio.Lock = telegram_input.telegram_input_locks[telegram_input_lock_index]
-    lock.release()
+    telegram_input_queue_index: int = data.get("telegram_input_queue_index")
+    queue: asyncio.Queue = telegram_input.telegram_input_queues[telegram_input_queue_index]
+    await queue.put(message.text)
     await CreateDocument.ProcessQuery.set()
 
 
