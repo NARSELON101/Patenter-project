@@ -10,12 +10,11 @@ import utils.db_commands as db
 from keyboards import inline
 from keyboards import reply
 from misc.states import CreateDocument
-
-from loader import dp
-
 from utils import telegram_input
 
 logger = logging.getLogger(__name__)
+
+query_process_tasks: dict[int, asyncio.Task] = {}
 
 
 async def user_start(message: Message, state: FSMContext) -> None:
@@ -26,6 +25,18 @@ async def user_start(message: Message, state: FSMContext) -> None:
     await message.answer("Привет!", reply_markup=await reply.start_menu())
 
 
+async def user_cancel_query_processing(message: Message, state: FSMContext) -> None:
+    data = await state.get_data()
+    query_process_task_index = data.get('query_process_task_index')
+    # Если это пользователь не начал обработку запроса, то отменять нечего
+    if query_process_task_index is None:
+        return
+    query_process_task = query_process_tasks[query_process_task_index]
+    query_process_task.cancel()
+    await message.reply("Запрос отменён", reply_markup=await reply.start_menu())
+    await CreateDocument.Processor.set()
+
+
 async def create_document(message: Message, state: FSMContext) -> None:
     await state.reset_state()
 
@@ -33,7 +44,6 @@ async def create_document(message: Message, state: FSMContext) -> None:
     await CreateDocument.Processor.set()
 
 
-# @dp.message_handler(state=CreateDocument.GetInput)
 async def process_input(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     await state.update_data(telegram_input=message.text)
@@ -43,13 +53,14 @@ async def process_input(message: Message, state: FSMContext) -> None:
     await CreateDocument.ProcessQuery.set()
 
 
-# @dp.message_handler(state=CreateDocument.GetUserQueryForGpt)
 async def get_user_query_for_gpt(message: Message, state: FSMContext) -> None:
     query = message.text
     data = await state.get_data()
     query_processor = data.get('query_processor')
     bot = Dispatcher.get_current().bot
-    await process_query(bot, query_processor, state.chat, use_gpt=True, query_gpt=query)
+    task = asyncio.create_task(process_query(bot, query_processor, state.chat, use_gpt=True, query_gpt=query))
+    query_process_tasks[state.chat] = task
+    await state.update_data(query_process_task_index=state.chat)
 
 
 async def select_use_yandex_gpt(call: CallbackQuery, state: FSMContext, callback_data: dict | None = None) -> None:
@@ -61,10 +72,13 @@ async def select_use_yandex_gpt(call: CallbackQuery, state: FSMContext, callback
     query_processor = data.get('query_processor')
     await call.message.answer("Начинаю обработку...", reply_markup=await reply.cancel_menu())
     if chosen_use_yagpt:
-        await bot.send_message(chat_id=state.chat, text="Введите запрос для GPT: ", reply_markup=await reply.cancel_menu())
+        await bot.send_message(chat_id=state.chat, text="Введите запрос для GPT: ",
+                               reply_markup=await reply.cancel_menu())
         await CreateDocument.GetUserQueryForGpt.set()
     else:
-        await process_query(bot, query_processor, state.chat, use_gpt=chosen_use_yagpt)
+        task = asyncio.create_task(process_query(bot, query_processor, state.chat, use_gpt=chosen_use_yagpt))
+        query_process_tasks[state.chat] = task
+        await state.update_data(query_process_task_index=state.chat)
 
 
 async def process_query(bot, query_processor, chat, use_gpt: bool = False, query_gpt: str | None = None):
@@ -82,7 +96,6 @@ async def process_query(bot, query_processor, chat, use_gpt: bool = False, query
         await bot.send_message(chat_id=chat, text=f"Ошибка при обработке запроса")
 
 
-
 async def select_query_processor(call: CallbackQuery, callback_data: dict, state: FSMContext) -> None:
     chosen_query_processor_index = int(callback_data.get('processor_number'))
     await state.update_data(query_processor=qp.query_processors[chosen_query_processor_index])
@@ -94,9 +107,8 @@ async def select_query_processor(call: CallbackQuery, callback_data: dict, state
 
 def register_user(dp: Dispatcher):
     dp.register_message_handler(user_start, commands=["start"], state="*")
-    dp.register_message_handler(user_start, text="Отмена", state="*")
+    dp.register_message_handler(user_cancel_query_processing, text="Отмена", state="*")
     dp.register_message_handler(create_document, text="Создать документ", state="*")
-
 
     dp.register_callback_query_handler(select_query_processor, inline.processor.filter(action="get_processor"),
                                        state=CreateDocument.Processor)
