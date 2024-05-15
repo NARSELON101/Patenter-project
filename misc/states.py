@@ -8,3 +8,7 @@ class CreateDocument(StatesGroup):
     WaitForYandexGPT = State()
     ProcessQuery = State()
     GetUserQueryForGpt = State()
+
+
+class AddFile(StatesGroup):
+    AddUserFile = State()
