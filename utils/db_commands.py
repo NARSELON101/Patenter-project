@@ -1,5 +1,7 @@
-from utils.models import User
 from aiogram import types
+
+from utils.models import User, Documents
+
 
 async def get_user():
     user = types.User.get_current()
@@ -16,3 +18,9 @@ async def add_new_user():
     user.telegram_id = telegram.id
     await user.create()
     return user
+
+
+async def add_file_to_user(document: str):
+    user = await get_user()
+    doc = Documents(document=document, user=user)
+    await doc.create()

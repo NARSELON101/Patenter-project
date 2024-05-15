@@ -1,9 +1,15 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
+buttons = [
+    "Создать документ",
+    "Добавить документ"
+]
+
 
 async def start_menu():
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add(KeyboardButton("Создать документ"))
+    for button_text in buttons:
+        markup.add(KeyboardButton(button_text))
     return markup
 
 
