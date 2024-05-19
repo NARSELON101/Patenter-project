@@ -1,6 +1,8 @@
-from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram import types
+from aiogram.dispatcher.middlewares import BaseMiddleware
+
 import utils.db_commands as db
+
 
 class AccessMiddleware(BaseMiddleware):
     def __init__(self):
