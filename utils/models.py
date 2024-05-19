@@ -1,18 +1,22 @@
 import datetime
 
-from sqlalchemy import (Column, Integer, DateTime, JSON, String, ForeignKey)
+from sqlalchemy import (Column, Integer, DateTime, String, ForeignKey)
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from utils.database import db
 
 
-class Documents(db.Model):
+class Document(db.Model):
     __tablename__ = "documents"
     id = Column(Integer, autoincrement=True, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     document = Column(String(300))
 
-    user = relationship("User", backref="documents")
+    fields_metadata = db.Column(JSONB, nullable=False, server_default="{}")
+
+    def __repr__(self):
+        return f"{self.id}, {self.user_id}, {self.document}"
 
 
 class User(db.Model):
@@ -21,7 +25,7 @@ class User(db.Model):
     telegram_id = Column(Integer, default=0)
     registration_date = Column(DateTime, default=datetime.datetime.now())
 
-    documents = relationship(Documents, backref="users")
+    documents = relationship(Document, backref="users")
 
 
 class Request_history(db.Model):

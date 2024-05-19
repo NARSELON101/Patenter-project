@@ -1,6 +1,6 @@
 from aiogram import types
 
-from utils.models import User, Documents
+from utils.models import User, Document
 
 
 async def get_user():
@@ -11,7 +11,7 @@ async def get_user():
 async def add_new_user():
     telegram = types.User.get_current()
     old_user = await get_user()
-    if not old_user:
+    if old_user:
         return False
 
     user = User()
@@ -20,7 +20,12 @@ async def add_new_user():
     return user
 
 
-async def add_file_to_user(document: str):
+async def add_file_to_user(document: str) -> Document | None:
     user = await get_user()
-    doc = Documents(document=document, user=user)
+    if user is None:
+        return None
+    doc = Document()
+    doc.document = document
+    doc.user_id = user.id
     await doc.create()
+    return doc

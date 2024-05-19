@@ -22,7 +22,7 @@ async def user_start(message: Message, state: FSMContext) -> None:
     user = await db.get_user()
     if not user:
         await db.add_new_user()
-    await message.answer("Привет!", reply_markup=await reply.start_menu())
+    await message.answer(f"Привет!", reply_markup=await reply.start_menu())
 
 
 async def create_document(message: Message, state: FSMContext) -> None:
