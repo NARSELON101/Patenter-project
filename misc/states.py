@@ -12,3 +12,8 @@ class CreateDocument(StatesGroup):
 
 class AddFile(StatesGroup):
     AddUserFile = State()
+
+
+class ViewFile(StatesGroup):
+    SelectFile = State()
+    ViewSelectedFile = State()

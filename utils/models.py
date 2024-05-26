@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from sqlalchemy import (Column, Integer, DateTime, String, ForeignKey)
 from sqlalchemy.dialects.postgresql import JSONB
@@ -13,7 +14,12 @@ class Document(db.Model):
     user_id = Column(Integer, ForeignKey("users.id"))
     document = Column(String(300))
 
+    name = Column(String(300))
+
     fields_metadata = db.Column(JSONB, nullable=False, server_default="{}")
+
+    def get_field_metadate_dict(self):
+        return json.loads(self.fields_metadata)
 
     def __repr__(self):
         return f"{self.id}, {self.user_id}, {self.document}"
