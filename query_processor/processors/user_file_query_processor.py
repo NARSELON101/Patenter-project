@@ -2,6 +2,8 @@ import json
 import logging
 import re
 
+from aiogram import Dispatcher
+
 from query_processor.data_source.telegram_data_source import TelegramDataSource
 from query_processor.gpt.yagpt import yagpt
 from query_processor.processors.processor import QueryProcessor
@@ -24,6 +26,7 @@ class UserQueryProcessor(QueryProcessor):
         self.template_file = file.document
         self.template = UserFileTemplate(self.template_file)
         self.__name = file.name or file.document
+        self.tg_dispatcher = Dispatcher.get_current()
 
     @staticmethod
     def get_name():
@@ -59,7 +62,7 @@ class UserQueryProcessor(QueryProcessor):
         #  Формируем запрос к GPT
         if query is not None:
             self.prompt = (f"В документе есть эти поля:"
-                           f"{fields_desc}"
+                           f"{fields_desc} "
                            f"Запрос пользователя: {query}")
             res = {}
         else:
