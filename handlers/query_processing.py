@@ -70,7 +70,7 @@ async def init_process_query(bot, query, use_gpt, query_processor: QueryProcesso
 
 
 async def process_query(bot, query_processor, chat, use_gpt: bool = False, query_gpt: str | None = None):
-    CreateDocument.ProcessQuery.set()
+    await CreateDocument.ProcessQuery.set()
     result_files = None
     try:
         result_files: list[str] | None = await query_processor(use_gpt=use_gpt).async_process_query(query_gpt)
@@ -80,7 +80,6 @@ async def process_query(bot, query_processor, chat, use_gpt: bool = False, query
             await bot.send_message(chat_id=chat,
                                    text=f"Возникла ошибка при обработке запроса: {e} \n {traceback.format_exc()}")
     if result_files is not None:
-        await bot.send_message(chat_id=chat, text=f"Результат: {result_files}", reply_markup=await reply.start_menu())
         # Если вернулся список предполагаем, что это список сгенерированных файлов
         if isinstance(result_files, list):
             for result_file in result_files:
