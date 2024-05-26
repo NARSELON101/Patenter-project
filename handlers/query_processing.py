@@ -15,6 +15,17 @@ from query_processor.processors.processor import QueryProcessor
 logger = logging.getLogger(__name__)
 
 
+async def select_user_query_processor(call: CallbackQuery,
+                                      callback_data: dict,
+                                      state: FSMContext) -> None:
+    chosen_query_processor_index = int(callback_data.get('processor_number'))
+    await state.update_data(query_processor=await qp.user_query_processor(chosen_query_processor_index))
+    await CreateDocument.UseYandexGPT.set()
+    await call.message.edit_text(f"Выбран процессор: {qp.query_processors[chosen_query_processor_index].get_name()}"
+                                 f"\n Использовать Яндекс GPT-3?",
+                                 reply_markup=await inline.select_use_yandex_gpt())
+
+
 async def select_query_processor(call: CallbackQuery, callback_data: dict, state: FSMContext) -> None:
     chosen_query_processor_index = int(callback_data.get('processor_number'))
     await state.update_data(query_processor=qp.query_processors[chosen_query_processor_index])
