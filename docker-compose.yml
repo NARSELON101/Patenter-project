@@ -1,0 +1,17 @@
+services:
+  bot:
+    build:
+      dockerfile: ./Dockerfile
+    ports:
+      - '8000:80'
+
+  postgres:
+    image: postgres
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_PASSWORD=postgres
+
+
+
+
