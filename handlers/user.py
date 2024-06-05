@@ -54,7 +54,14 @@ async def get_user_query_for_gpt(message: Message, state: FSMContext) -> None:
     await init_process_query(bot, query, True, query_processor, state)
 
 
+async def faq(message: Message) -> None:
+    await message.answer(
+        "Загружаемый документ должен быть docx. Поля, которые нужно заполнить должны быть  в формате {{ имя поля }}")
+
+
 def register_user(dp: Dispatcher):
+    dp.register_message_handler(faq, text="FAQ", state="*")
+
     dp.register_message_handler(user_start, commands=["start"], state="*")
     dp.register_message_handler(user_cancel_query_processing, text="Отмена", state="*")
     dp.register_message_handler(create_document, text="Создать документ", state="*")
