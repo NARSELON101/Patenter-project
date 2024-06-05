@@ -3,7 +3,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 buttons = [
     "Создать документ",
     "Добавить документ",
-    "Мои документы"
+    "Мои документы",
     "FAQ"
 ]
 
